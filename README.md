@@ -73,6 +73,8 @@ moving parts for now.
 
 ## Version history
 
+* 1.1
+  * updater: avoid adding tasks that are not started
 * 1.0 first public version
 
 ## TODO

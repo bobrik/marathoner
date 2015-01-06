@@ -107,6 +107,10 @@ func (m Marathon) State() (State, error) {
 			}
 		}
 
+		if t.StartedAt == "" {
+			continue
+		}
+
 		if t.StartedAt != "" {
 			t.StartedAt = "see https://github.com/mesosphere/marathon/issues/918"
 		}
