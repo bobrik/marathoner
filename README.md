@@ -16,6 +16,45 @@ and listeners on each node for high availability.
 
 You can also run optional logger to log every state change that happens.
 
+
+## Ascii view
+
+```
+
+        +---------+   +---------+   +---------+
+        |marathon1|   |marathon2|   |marathon3|
+        +----^----+   +----^----+   +----^----+
+             |             |             |
+             |             |             |
+             ^-------------^-------------^  polling random alive marathon
+             |             |             |
+         +---+---+     +---+---+     +---+---+
+         |updater|     |updater|     |updater|
+         +---+---+     +---+---+     +---+---+
+             |             |             |
+             |             |             |  pushing to every connected client
+             |             |             |
+       +-----v------+------v------+------v------+
+       |            |             |             |
+       |            |             |             |
+  +----v----+  +----v----+   +----v----+   +----v----+
+  |listener1|  |listener1|   |listener1|   |listener1|
+  +----+----+  +----+----+   +----+----+   +----+----+
+       |            |             |             |
+       |            |             |             |  reloading local haproxy
+       |            |             |             |
+   +---v---+    +---v---+     +---v---+     +---v---+
+   |haproxy|    |haproxy|     |haproxy|     |haproxy|
+   +---^---+    +---^---+     +---^---+     +---^---+
+       |            |             |             |
+       |            |             |             |  apps talk to local haproxy
+       |            |             |             |
+     +-+-+        +-+-+         +-+-+         +-+-+
+     |app|        |app|         |app|         |app|
+     +---+        +---+         +---+         +---+
+
+```
+
 ## Features
 
 * Nearly zero configuration, everything needed is in marathon.
