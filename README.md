@@ -60,6 +60,7 @@ You can also run optional logger to log every state change that happens.
 * Nearly zero configuration, everything needed is in marathon.
 * Both components are independent and share nothing for high availability.
 * Marathon api is only used by updaters, thus reducing load on marathon.
+* Health check awareness, only healthy tasks are added to haproxy.
 * Nothing breaks if marathon goes down for some reason.
 * Listeners do nothing if no changes happen in marathon, no polling involved.
 * Graceful restarts and config checking for haproxy to avoid downtime.
