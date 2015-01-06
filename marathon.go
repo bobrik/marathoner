@@ -14,7 +14,7 @@ type marathonResponse struct {
 	Tasks marathonTasks `json:"tasks"`
 }
 
-// marathonTasks is an alieas for slice of marathonTask
+// marathonTasks is an alias for slice of marathonTask
 type marathonTasks []marathonTask
 
 // Len return length of marathonTask slice
@@ -54,7 +54,7 @@ type Marathon struct {
 	endpoints []string
 }
 
-// NewMarathon creates new marathon cliend with specified endpoints
+// NewMarathon creates new marathon client with specified endpoints
 func NewMarathon(endpoints []string) Marathon {
 	return Marathon{
 		endpoints: endpoints,

@@ -69,7 +69,7 @@ type HaproxyConfigurator struct {
 }
 
 // NewHaproxyConfigurator creates configurator with specified config file
-// paht, bind location and pidfile location
+// path, bind location and pidfile location
 func NewHaproxyConfigurator(conf string, bind string, pidfile string) *HaproxyConfigurator {
 	return &HaproxyConfigurator{
 		apps:    nil,
@@ -80,7 +80,7 @@ func NewHaproxyConfigurator(conf string, bind string, pidfile string) *HaproxyCo
 	}
 }
 
-// Update runs actualy update and logs error if it happens
+// Update runs actually update and logs error if it happens
 func (c *HaproxyConfigurator) Update(s State, r *bool) error {
 	err := c.update(s, r)
 	if err != nil {
