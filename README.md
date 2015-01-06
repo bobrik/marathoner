@@ -14,6 +14,8 @@ Marathoner consists of two parts:
 You would probably want to run 3-5 updaters (one per marathon server)
 and listeners on each node for high availability.
 
+You can also run optional logger to log every state change that happens.
+
 ## Features
 
 * Nearly zero configuration, everything needed is in marathon.
@@ -49,6 +51,15 @@ docker run -d --net=host bobrik/marathoner-listener:1.0 \
   -u marathoner-updater1:7676,marathoner-updater2:7676 -b 127.0.0.1
 ```
 
+### Logger
+
+The following command runs marathoner logger with
+specified updater and logs state changes to stdout:
+
+```
+docker run --rm bobrik/marathoner-logger:1.2 -u marathoner-updater1:7676
+```
+
 ## Building
 
 If you made some changes and wish to check how they work, `./containers/make.sh`
@@ -60,6 +71,9 @@ could help you with building containers. Just run:
 
 # build updater image with the name my-updater
 ./containers/make.sh updater my-updater
+
+# build logger image with the name my-logger
+./containers/make.sh updater my-logger
 ```
 
 ## Why not confd?
@@ -73,9 +87,12 @@ moving parts for now.
 
 ## Version history
 
+* 1.2
+  * added logger container
 * 1.1
   * updater: avoid adding tasks that are not started
-* 1.0 first public version
+* 1.0
+  * first public version
 
 ## TODO
 
