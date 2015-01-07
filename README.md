@@ -64,6 +64,7 @@ You can also run optional logger to log every state change that happens.
 * Nothing breaks if marathon goes down for some reason.
 * Listeners do nothing if no changes happen in marathon, no polling involved.
 * Graceful restarts and config checking for haproxy to avoid downtime.
+* Services available externally and internally without any app code changes.
 
 ## Usage
 
