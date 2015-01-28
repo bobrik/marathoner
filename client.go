@@ -12,8 +12,8 @@ type client struct {
 	rc   *rpc.Client
 }
 
-// NewClient create client with given net.Conn
-func NewClient(conn net.Conn) *client {
+// newClient create client with given net.Conn
+func newClient(conn net.Conn) *client {
 	return &client{
 		name: conn.RemoteAddr().String(),
 		rc:   rpc.NewClient(conn),

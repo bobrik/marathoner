@@ -11,7 +11,7 @@ type Configurator struct {
 	impl ConfiguratorImplementation
 }
 
-// Updates updates configuration on implementation.
+// Update updates configuration on implementation.
 func (c *Configurator) Update(s State, r *bool) error {
 	return c.impl.Update(s, r)
 }

@@ -13,6 +13,7 @@ import (
 type Listener struct {
 	updaters []string
 	conf     ConfiguratorImplementation
+	rand     *rand.Rand
 }
 
 // NewListener creates new listener for specified updater
@@ -21,6 +22,7 @@ func NewListener(updaters []string, conf ConfiguratorImplementation) *Listener {
 	return &Listener{
 		updaters: updaters,
 		conf:     conf,
+		rand:     rand.New(rand.NewSource(time.Now().UnixNano())),
 	}
 }
 
@@ -43,7 +45,7 @@ func (l *Listener) Start() {
 
 // dialUpdater connects to random updater
 func (l *Listener) dialUpdater() (net.Conn, error) {
-	for _, i := range rand.Perm(len(l.updaters)) {
+	for _, i := range l.rand.Perm(len(l.updaters)) {
 		resp, err := net.Dial("tcp", l.updaters[i])
 		if err != nil {
 			log.Println("error connecting to updater " + l.updaters[i] + ", " + err.Error())

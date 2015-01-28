@@ -117,6 +117,14 @@ could help you with building containers. Just run:
 ./containers/make.sh updater my-logger
 ```
 
+## Port range support
+
+If an app has label `marathoner_port_range` set to `true` (string),
+then each task of this app will be proxied from different port.
+This way you could launch 10 memcached instances on ports
+`12001..12010` just by specifying port `12001`. Marathoner will try
+to map ports to the same tasks during scaling.
+
 ## Why not confd?
 
 Confd requires backend to store data and supports etcd and consul.
@@ -128,6 +136,15 @@ moving parts for now.
 
 ## Version history
 
+* 1.4
+  * Added labels for apps
+  * Using `/v2/apps?embed=apps.tasks` instead of `/v2/tasks`
+  * Using `startedAt` from marathon
+  * Depends on unreleased yet marathon 0.8.0
+  * Port range support
+  * golint fixes
+* 1.3
+  * seeding random generator for better load distribution
 * 1.2
   * added logger container
 * 1.1

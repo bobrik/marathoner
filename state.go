@@ -5,14 +5,15 @@ type State map[string]App
 
 // App is marathon app with name, ports and tasks
 type App struct {
-	Name  string
-	Ports []int
-	Tasks []Task
+	Name   string
+	Labels map[string]string
+	Ports  []int
+	Tasks  []Task
 }
 
 // Task is marathon task with id, host and port
 type Task struct {
-	Id        string
+	ID        string
 	Host      string
 	Ports     []int
 	StagedAt  string

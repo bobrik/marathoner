@@ -98,7 +98,7 @@ func (u *Updater) ListenForClients(listen string) error {
 		}
 
 		go func() {
-			err := u.handleConnection(NewClient(c))
+			err := u.handleConnection(newClient(c))
 			if err != nil {
 				log.Println("error handling connection:", err)
 			}
