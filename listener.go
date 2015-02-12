@@ -52,6 +52,8 @@ func (l *Listener) dialUpdater() (net.Conn, error) {
 			continue
 		}
 
+		log.Println("dial succeeded", l.updaters[i])
+
 		return resp, nil
 	}
 
