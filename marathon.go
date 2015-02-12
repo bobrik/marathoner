@@ -55,12 +55,12 @@ func (mt marathonTasks) Swap(i, j int) {
 
 // marathonTask is an embedded task from /v2/apps?embed=apps.tasks api endpoint
 type marathonTask struct {
-	ID                 string                          `json:"id"`
-	Host               string                          `json:"host"`
-	Ports              []int                           `json:"ports"`
-	StagedAt           string                          `json:"stagedAt"`
-	StartedAt          string                          `json:"startedAt"`
-	HealthCheckResults []marathonTaskHealthCheckResult `json:"healthCheckResults"`
+	ID                 string                           `json:"id"`
+	Host               string                           `json:"host"`
+	Ports              []int                            `json:"ports"`
+	StagedAt           string                           `json:"stagedAt"`
+	StartedAt          string                           `json:"startedAt"`
+	HealthCheckResults []*marathonTaskHealthCheckResult `json:"healthCheckResults"`
 }
 
 // marathonTaskHealthCheckResult is a health check result for a task
@@ -99,6 +99,26 @@ func (m Marathon) State() (State, error) {
 		return nil, err
 	}
 
+	return marathonResponseToState(mr)
+}
+
+// fetchApps fetches apps from random alive marathon server
+func (m Marathon) fetchApps() (*http.Response, error) {
+	for _, i := range m.rand.Perm(len(m.endpoints)) {
+		resp, err := http.Get(m.endpoints[i] + "/v2/apps?embed=apps.tasks")
+		if err != nil {
+			log.Println("error fetching marathon apps from " + m.endpoints[i] + ", " + err.Error())
+			continue
+		}
+
+		return resp, nil
+	}
+
+	return nil, errors.New("app list fetching failed on all marathon endpoints")
+}
+
+// marathonResponseToState converts marathon api response to state
+func marathonResponseToState(mr *marathonResponse) (State, error) {
 	state := map[string]App{}
 
 	sort.Sort(mr.Apps)
@@ -137,6 +157,11 @@ func (m Marathon) State() (State, error) {
 		for _, t := range a.Tasks {
 			alive := true
 			for _, h := range t.HealthCheckResults {
+				// see https://github.com/mesosphere/marathon/issues/1106
+				if h == nil {
+					continue
+				}
+
 				if !h.Alive {
 					alive = false
 					break
@@ -170,19 +195,4 @@ func (m Marathon) State() (State, error) {
 	}
 
 	return state, nil
-}
-
-// fetchApps fetches apps from random alive marathon server
-func (m Marathon) fetchApps() (*http.Response, error) {
-	for _, i := range m.rand.Perm(len(m.endpoints)) {
-		resp, err := http.Get(m.endpoints[i] + "/v2/apps?embed=apps.tasks")
-		if err != nil {
-			log.Println("error fetching marathon apps from " + m.endpoints[i] + ", " + err.Error())
-			continue
-		}
-
-		return resp, nil
-	}
-
-	return nil, errors.New("app list fetching failed on all marathon endpoints")
 }
