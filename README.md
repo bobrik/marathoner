@@ -117,14 +117,6 @@ could help you with building containers. Just run:
 ./containers/make.sh updater my-logger
 ```
 
-## Port range support
-
-If an app has label `marathoner_port_range` set to `true` (string),
-then each task of this app will be proxied from different port.
-This way you could launch 10 memcached instances on ports
-`12001..12010` just by specifying port `12001`. Marathoner will try
-to map ports to the same tasks during scaling.
-
 ## Why not confd?
 
 Confd requires backend to store data and supports etcd and consul.
@@ -136,6 +128,10 @@ moving parts for now.
 
 ## Version history
 
+* 1.5
+  * Removed port range support since it required coordination
+  * Logging current updater endpoint in listener and logger
+  * Worakround for https://github.com/mesosphere/marathon/issues/1106
 * 1.4
   * Added labels for apps
   * Using `/v2/apps?embed=apps.tasks` instead of `/v2/tasks`
