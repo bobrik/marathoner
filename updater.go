@@ -11,7 +11,7 @@ import (
 // Updater is update coordinator
 type Updater struct {
 	mutex   sync.Mutex
-	apps    State
+	state   State
 	updates chan State
 	clients map[string]chan State
 }
@@ -20,7 +20,6 @@ type Updater struct {
 func NewUpdater() *Updater {
 	return &Updater{
 		mutex:   sync.Mutex{},
-		apps:    nil,
 		clients: map[string]chan State{},
 	}
 }
@@ -47,12 +46,12 @@ func (u *Updater) ListenForUpdates(marathon []string, interval time.Duration) {
 func (u *Updater) update(s State) {
 	u.mutex.Lock()
 
-	if reflect.DeepEqual(u.apps, s) {
+	if reflect.DeepEqual(u.state, s) {
 		u.mutex.Unlock()
 		return
 	}
 
-	u.apps = s
+	u.state = s
 
 	clients := u.clients
 	u.mutex.Unlock()
@@ -117,7 +116,7 @@ func (u *Updater) handleConnection(c *client) error {
 	}()
 
 	u.mutex.Lock()
-	apps := u.apps
+	apps := u.state
 
 	// no apps -> no updates, closing instantly
 	if apps == nil {
