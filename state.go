@@ -19,3 +19,18 @@ type Task struct {
 	StagedAt  string
 	StartedAt string
 }
+
+// Tasks is a slice of tasks
+type Tasks []Task
+
+func (t Tasks) Len() int {
+	return len(t)
+}
+
+func (t Tasks) Less(i, j int) bool {
+	return t[i].ID < t[j].ID
+}
+
+func (t Tasks) Swap(i, j int) {
+	t[i], t[j] = t[j], t[i]
+}
