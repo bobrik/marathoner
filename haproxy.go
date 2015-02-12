@@ -103,7 +103,7 @@ func (c *HaproxyConfigurator) update(s State, r *bool) error {
 		return nil
 	}
 
-	c.state = rearrangeTasks(c.state, s)
+	c.state = s
 
 	err := c.updateConfig()
 	if err != nil {
@@ -198,124 +198,22 @@ func stateToApps(s State) map[int]HaproxyApp {
 
 	for _, a := range s {
 		for i, p := range a.Ports {
-			// separate app for each task
-			if e, ok := a.Labels["marathoner_port_range"]; ok && e == "true" {
-				for j, t := range a.Tasks {
-					app := HaproxyApp{
-						Port: p + j,
-						Servers: []HaproxyServer{
-							HaproxyServer{
-								Host: t.Host,
-								Port: t.Ports[i],
-							},
-						},
-					}
+			app := HaproxyApp{
+				Port:    p,
+				Servers: []HaproxyServer{},
+			}
 
-					r[app.Port] = app
-				}
-			} else {
-				app := HaproxyApp{
-					Port:    p,
-					Servers: []HaproxyServer{},
+			for _, t := range a.Tasks {
+				server := HaproxyServer{
+					Host: t.Host,
+					Port: t.Ports[i],
 				}
 
-				for _, t := range a.Tasks {
-					server := HaproxyServer{
-						Host: t.Host,
-						Port: t.Ports[i],
-					}
-
-					app.Servers = append(app.Servers, server)
-				}
-
-				r[app.Port] = app
-			}
-		}
-	}
-
-	return r
-}
-
-func rearrangeTasks(prev, s State) State {
-	if prev == nil {
-		return s
-	}
-
-	r := map[string]App{}
-
-	for i, a := range s {
-		// no need for port range - skipping
-		if e, ok := a.Labels["marathoner_port_range"]; !ok || e != "true" {
-			r[i] = a
-			continue
-		}
-
-		// new app - skipping
-		if _, ok := prev[i]; !ok {
-			r[i] = a
-			continue
-		}
-
-		prevPositions := make(map[string]int, len(prev[i].Tasks))
-		for i, t := range prev[i].Tasks {
-			prevPositions[t.ID] = i
-		}
-
-		currPositions := make(map[string]int, len(a.Tasks))
-		for i, t := range a.Tasks {
-			currPositions[t.ID] = i
-		}
-
-		remaining := make(map[string]Task)
-		for _, t := range a.Tasks {
-			remaining[t.ID] = t
-		}
-
-		places := make(map[int]Task, len(a.Tasks))
-
-		// placing old tasks to their prev places
-		// if they are still present in new version
-		for id, i := range prevPositions {
-			if _, ok := remaining[id]; !ok {
-				continue
+				app.Servers = append(app.Servers, server)
 			}
 
-			places[i] = a.Tasks[currPositions[id]]
-			delete(remaining, id)
+			r[app.Port] = app
 		}
-
-		// placing remaining new tasks in the holes
-		tasks := make([]Task, len(a.Tasks))
-		for i := 0; i < len(a.Tasks); i++ {
-			if t, ok := places[i]; ok {
-				tasks[i] = t
-				continue
-			}
-
-			found := false
-			for id, t := range remaining {
-				tasks[i] = t
-				found = true
-				delete(remaining, id)
-				break
-			}
-
-			if !found {
-				log.Println("we screwed rearrangement, discarding it")
-				log.Printf("prev = %#v\n", prev)
-				log.Printf("s = %#v\n", s)
-				return s
-			}
-		}
-
-		rearranged := App{
-			Name:   a.Name,
-			Labels: a.Labels,
-			Ports:  a.Ports,
-			Tasks:  tasks,
-		}
-
-		r[i] = rearranged
 	}
 
 	return r
