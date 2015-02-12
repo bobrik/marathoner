@@ -18,17 +18,14 @@ type marathonResponse struct {
 // marathonApps is an alias for slice of marathonApp
 type marathonApps []marathonApp
 
-// Len returns the length of marathonApps slice
 func (ma marathonApps) Len() int {
 	return len(ma)
 }
 
-// Less compares two marathon apps with specified indices
 func (ma marathonApps) Less(i, j int) bool {
 	return ma[i].ID < ma[j].ID
 }
 
-// Swap swaps two marathon apps with specified indices
 func (ma marathonApps) Swap(i, j int) {
 	ma[i], ma[j] = ma[j], ma[i]
 }
@@ -44,17 +41,14 @@ type marathonApp struct {
 // marathonTasks is an alias for slice of marathonTask
 type marathonTasks []marathonTask
 
-// Len returns the length of marathonTask slice
 func (mt marathonTasks) Len() int {
 	return len(mt)
 }
 
-// Less compares two marathon tasks with specified indices
 func (mt marathonTasks) Less(i, j int) bool {
 	return mt[i].ID < mt[j].ID
 }
 
-// Swap swaps two marathon tasks with specified indices
 func (mt marathonTasks) Swap(i, j int) {
 	mt[i], mt[j] = mt[j], mt[i]
 }
