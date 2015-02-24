@@ -128,6 +128,8 @@ moving parts for now.
 
 ## Version history
 
+* 1.6
+  * Higher timeouts for idle connections, more connections (only listener)
 * 1.5
   * Removed port range support since it required coordination
   * Logging current updater endpoint in listener and logger

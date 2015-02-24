@@ -16,15 +16,17 @@ global
   log 127.0.0.1 local0
   log 127.0.0.1 local1 notice
   stats socket /etc/haproxy/haproxy.sock level admin
-  maxconn 4096
+  maxconn 16384
 
 defaults
-  log             global
-  retries         3
-  maxconn         2000
-  timeout connect 5000
-  timeout client  50000
-  timeout server  50000
+  log                global
+  retries            3
+  maxconn            2000
+  timeout connect    5s
+  timeout client     50s
+  timeout server     50s
+  timeout tunnel     2h
+  timeout client-fin 20s
 
 {{ $bind := .Bind }}
 
