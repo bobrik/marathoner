@@ -36,6 +36,7 @@ type HaproxyServer struct {
 // HaproxyConfigurator implements ConfiguratorImplementation for haproxy
 type HaproxyConfigurator struct {
 	state    State
+	apps     map[int]HaproxyApp
 	mutex    sync.Mutex
 	template *template.Template
 	conf     string
@@ -48,6 +49,7 @@ type HaproxyConfigurator struct {
 func NewHaproxyConfigurator(template *template.Template, conf string, bind string, pidfile string) *HaproxyConfigurator {
 	return &HaproxyConfigurator{
 		state:    nil,
+		apps:     nil,
 		mutex:    sync.Mutex{},
 		template: template,
 		conf:     conf,
@@ -73,13 +75,14 @@ func (c *HaproxyConfigurator) update(s State, r *bool) error {
 
 	log.Println("received update request")
 
-	if reflect.DeepEqual(s, c.state) {
+	apps := stateToApps(s)
+	if reflect.DeepEqual(apps, c.apps) {
 		log.Println("state is the same, not doing any updates")
 		*r = false
 		return nil
 	}
 
-	c.state = s
+	c.apps = apps
 
 	err := c.updateConfig()
 	if err != nil {
@@ -119,7 +122,7 @@ func (c *HaproxyConfigurator) updateConfig() error {
 
 	err = c.template.Execute(temp, haproxyConfigContext{
 		Bind: c.bind,
-		Apps: stateToApps(c.state),
+		Apps: c.apps,
 	})
 
 	if err != nil {
@@ -185,6 +188,10 @@ func stateToApps(s State) map[int]HaproxyApp {
 
 	for _, a := range s {
 		for i, p := range a.Ports {
+			if v, ok := a.Labels["marathoner_haproxy_enabled"]; !ok || (v != "true" && v != "1") {
+				continue
+			}
+
 			app := HaproxyApp{
 				Port:    p,
 				Servers: []HaproxyServer{},
