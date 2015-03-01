@@ -1,13 +1,16 @@
 package marathoner
 
 import (
+	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
 	"os/exec"
 	"reflect"
+	"strconv"
 	"strings"
 	"sync"
+	"syscall"
 	"text/template"
 )
 
@@ -173,25 +176,48 @@ func (c *HaproxyConfigurator) checkHaproxyConfig() error {
 	return err
 }
 
-// reloadHaproxy gracefully reloads haproxy and schedules
-// haproxy killing in the future to ensure that haproxy
-// processes do not live for too long after they are replaced
+// reloadHaproxy gracefully reloads haproxy and starts haproxy if needed
 func (c *HaproxyConfigurator) reloadHaproxy() error {
 	log.Println("reloading haproxy, really..")
+
+	if _, err := os.Stat(c.pidfile); os.IsNotExist(err) {
+		log.Println("pid file not exists, starting haproxy")
+		return c.startHaproxy()
+	}
 
 	p, err := ioutil.ReadFile(c.pidfile)
 	if err != nil {
 		return err
 	}
 
-	cmd := exec.Command("haproxy", "-D", "-f", c.conf, "-p", c.pidfile, "-sf", strings.TrimSpace(string(p)))
-	out, err := cmd.CombinedOutput()
+	pid, err := strconv.Atoi(strings.TrimSpace(string(p)))
 	if err != nil {
-		log.Fatal("error: " + err.Error() + ", out: " + string(out))
 		return err
 	}
 
+	err = syscall.Kill(pid, 0)
+	if err != nil {
+		if err != syscall.ESRCH {
+			return err
+		}
+
+		// process died somewhere
+		log.Println("haproxy process not exists, starting haproxy")
+		return c.startHaproxy()
+	}
+
+	cmd := exec.Command("haproxy", "-D", "-f", c.conf, "-p", c.pidfile, "-sf", strconv.Itoa(pid))
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		return fmt.Errorf("error reloading conf: %s, output: %s", err, string(out))
+	}
+
 	return nil
+}
+
+// startHaproxy starts haproxy process in the background
+func (c *HaproxyConfigurator) startHaproxy() error {
+	return exec.Command("haproxy", "-D", "-f", c.conf, "-p", c.pidfile).Run()
 }
 
 // stateToApps converts marathon state to haproxy apps
