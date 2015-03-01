@@ -14,38 +14,6 @@ import (
 	"text/template"
 )
 
-const haproxyConfigTemplate = `
-global
-  log 127.0.0.1 local0
-  log 127.0.0.1 local1 notice
-  stats socket /etc/haproxy/haproxy.sock level admin
-  maxconn 16384
-
-defaults
-  log                global
-  retries            3
-  maxconn            2000
-  timeout connect    5s
-  timeout client     50s
-  timeout server     50s
-  timeout tunnel     2h
-  timeout client-fin 20s
-
-{{ $bind := .Bind }}
-
-{{ range $app := .Apps }}
-	listen app-{{ $app.Port }}
-		bind {{ $bind }}:{{ $app.Port }}
-		mode tcp
-		option tcplog
-		balance leastconn
-
-		{{ range $server := $app.Servers }}
-		server {{ $server.Host }}-{{ $server.Port }} {{ $server.Host }}:{{ $server.Port }} check
-		{{ end }}
-{{ end }}
-`
-
 // haproxyConfigContext defines context for haproxy config template
 type haproxyConfigContext struct {
 	Bind string
@@ -66,22 +34,24 @@ type HaproxyServer struct {
 
 // HaproxyConfigurator implements ConfiguratorImplementation for haproxy
 type HaproxyConfigurator struct {
-	state   State
-	mutex   sync.Mutex
-	conf    string
-	bind    string
-	pidfile string
+	state    State
+	mutex    sync.Mutex
+	template *template.Template
+	conf     string
+	bind     string
+	pidfile  string
 }
 
-// NewHaproxyConfigurator creates configurator with specified config file
-// path, bind location and pidfile location
-func NewHaproxyConfigurator(conf string, bind string, pidfile string) *HaproxyConfigurator {
+// NewHaproxyConfigurator creates configurator with specified config template,
+// config file path, bind location and pidfile location
+func NewHaproxyConfigurator(template *template.Template, conf string, bind string, pidfile string) *HaproxyConfigurator {
 	return &HaproxyConfigurator{
-		state:   nil,
-		mutex:   sync.Mutex{},
-		conf:    conf,
-		bind:    bind,
-		pidfile: pidfile,
+		state:    nil,
+		mutex:    sync.Mutex{},
+		template: template,
+		conf:     conf,
+		bind:     bind,
+		pidfile:  pidfile,
 	}
 }
 
@@ -146,19 +116,7 @@ func (c *HaproxyConfigurator) updateConfig() error {
 
 	defer temp.Close()
 
-	t := template.New("config")
-	t.Funcs(template.FuncMap{
-		"replace": func(old, new, s string) string {
-			return strings.Replace(s, old, new, -1)
-		},
-	})
-
-	p, err := t.Parse(haproxyConfigTemplate)
-	if err != nil {
-		return err
-	}
-
-	err = p.Execute(temp, haproxyConfigContext{
+	err = c.template.Execute(temp, haproxyConfigContext{
 		Bind: c.bind,
 		Apps: stateToApps(c.state),
 	})

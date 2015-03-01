@@ -5,7 +5,7 @@ RUN echo "deb http://http.debian.net/debian wheezy-backports main" >> /etc/apt/s
     apt-get -y upgrade && \
     apt-get install -y --no-install-recommends haproxy
 
-ADD ./haproxy.cfg /etc/haproxy/haproxy.cfg
+ADD ./haproxy.cfg.template /etc/haproxy/haproxy.cfg.template
 ADD ./run.sh /run.sh
 
 ADD ./src/ /go/src
