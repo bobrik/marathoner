@@ -101,6 +101,11 @@ specified updater and logs state changes to stdout:
 docker run --rm bobrik/marathoner-logger:1.2 -u marathoner-updater1:7676
 ```
 
+### Exposing apps
+
+Marathon apps that needs to be exported should have label
+`marathoner_haproxy_enabled` set to `true`.
+
 ## Building
 
 If you made some changes and wish to check how they work, `./containers/make.sh`
@@ -117,17 +122,15 @@ could help you with building containers. Just run:
 ./containers/make.sh updater my-logger
 ```
 
-## Why not confd?
-
-Confd requires backend to store data and supports etcd and consul.
-Both of them cannot survive without the leader. That setup also
-needs some glue code to push marathon changes into confd backed.
-That glue code needs to be highly available and avoid extra
-updates on backend at the same time. That introduces too many
-moving parts for now.
-
 ## Version history
 
+* 1.7
+  * Listener: Fixed backports repo for haproxy
+  * Listener: Haproxy is launched and managed entirely from listener
+  * Listener: Constant retry in listener loop
+  * Listener: Externalized haproxy template
+  * Listener: Added labels to HaproxyApp structure
+  * Listener: Only apps with marathoner_haproxy_enabled label set to true appear in haproxy
 * 1.6
   * Higher timeouts for idle connections, more connections (only listener)
 * 1.5
@@ -154,4 +157,4 @@ moving parts for now.
 
 * blended restart policy: graceful + limit on number of running old versions
 * tagged automated builds with godep maybe
-* external haproxy config template
+* exit trap in listener for faster exit
