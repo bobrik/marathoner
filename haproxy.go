@@ -24,6 +24,7 @@ type haproxyConfigContext struct {
 type HaproxyApp struct {
 	Port    int
 	Servers []HaproxyServer
+	Labels  map[string]string
 }
 
 // HaproxyServer has host and port where working service is located
@@ -187,6 +188,7 @@ func stateToApps(s State) map[int]HaproxyApp {
 			app := HaproxyApp{
 				Port:    p,
 				Servers: []HaproxyServer{},
+				Labels:  a.Labels,
 			}
 
 			for _, t := range a.Tasks {
