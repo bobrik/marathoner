@@ -32,7 +32,7 @@ func (l *Listener) Start() {
 		c, err := l.dialUpdater()
 		if err != nil {
 			log.Println("connection error", err)
-			time.Sleep(time.Second * time.Duration(rand.Intn(10)))
+			time.Sleep(time.Second * 3)
 			continue
 		}
 
@@ -40,6 +40,9 @@ func (l *Listener) Start() {
 		s.Register(&Configurator{l.conf})
 
 		s.ServeConn(c)
+
+		log.Println("disconnected from updater, sleeping")
+		time.Sleep(time.Second * 3)
 	}
 }
 
