@@ -12,6 +12,7 @@ import (
 	"sync"
 	"syscall"
 	"text/template"
+	"time"
 )
 
 // haproxyConfigContext defines context for haproxy config template
@@ -42,11 +43,13 @@ type HaproxyConfigurator struct {
 	conf     string
 	bind     string
 	pidfile  string
+	timeout time.Duration
 }
 
 // NewHaproxyConfigurator creates configurator with specified config template,
-// config file path, bind location and pidfile location
-func NewHaproxyConfigurator(template *template.Template, conf string, bind string, pidfile string) *HaproxyConfigurator {
+// config file path, bind location, pidfile location and timeout
+// to keep previous haproxy running after reload
+func NewHaproxyConfigurator(template *template.Template, conf string, bind string, pidfile string, timeout time.Duration) *HaproxyConfigurator {
 	return &HaproxyConfigurator{
 		state:    nil,
 		apps:     nil,
@@ -55,6 +58,7 @@ func NewHaproxyConfigurator(template *template.Template, conf string, bind strin
 		conf:     conf,
 		bind:     bind,
 		pidfile:  pidfile,
+		timeout: timeout,
 	}
 }
 
@@ -168,6 +172,8 @@ func (c *HaproxyConfigurator) reloadHaproxy() error {
 		return c.startHaproxy()
 	}
 
+	c.scheduleTermination(pid)
+
 	cmd := exec.Command("haproxy", "-D", "-f", c.conf, "-p", c.pidfile, "-sf", strconv.Itoa(pid))
 	out, err := cmd.CombinedOutput()
 	if err != nil {
@@ -180,6 +186,40 @@ func (c *HaproxyConfigurator) reloadHaproxy() error {
 // startHaproxy starts haproxy process in the background
 func (c *HaproxyConfigurator) startHaproxy() error {
 	return exec.Command("haproxy", "-D", "-f", c.conf, "-p", c.pidfile).Run()
+}
+
+// scheduleTermination schedules termination with sigterm
+// of a previous haproxy instance after configured amount of time
+func (c *HaproxyConfigurator) scheduleTermination(pid int) {
+	log.Printf("scheduling termination for haproxy with pid %d in %s\n", pid, c.timeout)
+	deadline := time.Now().Add(c.timeout)
+
+	go func() {
+		for {
+			err := syscall.Kill(pid, 0)
+			if err != nil {
+				if err == syscall.ESRCH {
+					log.Printf("haproxy with pid %d gracefully exited before we killed it\n", pid)
+				} else {
+					log.Println("error checking that haproxy with pid %d is still running: %s\n", pid, err)
+				}
+
+				break
+			}
+
+			if time.Now().After(deadline) {
+				log.Printf("killing haproxy with pid %d with sigterm\n", pid)
+				err := syscall.Kill(pid, syscall.SIGTERM)
+				if err != nil {
+					log.Printf("error killing haproxy with pid %d: %s\n", pid, err)
+				}
+
+				break
+			}
+
+			time.Sleep(time.Second)
+		}
+	}()
 }
 
 // stateToApps converts marathon state to haproxy apps

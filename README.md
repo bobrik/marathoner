@@ -124,6 +124,8 @@ could help you with building containers. Just run:
 
 ## Version history
 
+* 1.8
+  * Listener: Configuring timeout to kill previous haproxy instances
 * 1.7
   * Listener: Fixed backports repo for haproxy
   * Listener: Haproxy is launched and managed entirely from listener
@@ -155,6 +157,5 @@ could help you with building containers. Just run:
 
 ## TODO
 
-* blended restart policy: graceful + limit on number of running old versions
 * tagged automated builds with godep maybe
 * exit trap in listener for faster exit
