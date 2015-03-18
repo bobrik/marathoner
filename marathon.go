@@ -72,6 +72,7 @@ type marathonTaskHealthCheckResult struct {
 type Marathon struct {
 	endpoints []string
 	rand      *rand.Rand
+	client    http.Client
 }
 
 // NewMarathon creates new marathon client with specified endpoints
@@ -79,6 +80,9 @@ func NewMarathon(endpoints []string) Marathon {
 	return Marathon{
 		endpoints: endpoints,
 		rand:      rand.New(rand.NewSource(time.Now().UnixNano())),
+		client: http.Client{
+			Timeout: time.Second * time.Duration(20),
+		},
 	}
 }
 
@@ -105,7 +109,7 @@ func (m Marathon) State() (State, error) {
 // fetchApps fetches apps from random alive marathon server
 func (m Marathon) fetchApps() (*http.Response, error) {
 	for _, i := range m.rand.Perm(len(m.endpoints)) {
-		resp, err := http.Get(m.endpoints[i] + "/v2/apps?embed=apps.tasks")
+		resp, err := m.client.Get(m.endpoints[i] + "/v2/apps?embed=apps.tasks")
 		if err != nil {
 			log.Println("error fetching marathon apps from " + m.endpoints[i] + ", " + err.Error())
 			continue

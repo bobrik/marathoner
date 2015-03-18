@@ -124,6 +124,8 @@ could help you with building containers. Just run:
 
 ## Version history
 
+* 1.9
+  * Updater: 20 second timeout for getting state from marathon
 * 1.8
   * Listener: Configuring timeout to kill previous haproxy instances
 * 1.7
