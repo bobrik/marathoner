@@ -109,7 +109,7 @@ func (m Marathon) State() (State, error) {
 // fetchApps fetches apps from random alive marathon server
 func (m Marathon) fetchApps() (*http.Response, error) {
 	for _, i := range m.rand.Perm(len(m.endpoints)) {
-		resp, err := m.client.Get(m.endpoints[i] + "/v2/apps?embed=apps.tasks")
+		resp, err := m.client.Get(m.endpoints[i] + "/v2/apps?embed=apps.tasks&label=marathoner_haproxy_enabled")
 		if err != nil {
 			log.Println("error fetching marathon apps from " + m.endpoints[i] + ", " + err.Error())
 			continue
