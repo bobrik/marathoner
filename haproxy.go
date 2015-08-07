@@ -43,7 +43,7 @@ type HaproxyConfigurator struct {
 	conf     string
 	bind     string
 	pidfile  string
-	timeout time.Duration
+	timeout  time.Duration
 }
 
 // NewHaproxyConfigurator creates configurator with specified config template,
@@ -58,7 +58,7 @@ func NewHaproxyConfigurator(template *template.Template, conf string, bind strin
 		conf:     conf,
 		bind:     bind,
 		pidfile:  pidfile,
-		timeout: timeout,
+		timeout:  timeout,
 	}
 }
 
@@ -156,7 +156,13 @@ func (c *HaproxyConfigurator) reloadHaproxy() error {
 		return err
 	}
 
-	pid, err := strconv.Atoi(strings.TrimSpace(string(p)))
+	s := strings.TrimSpace(string(p))
+	if s == "" {
+		log.Println("pid file is empty, starting haproxy")
+		return c.startHaproxy()
+	}
+
+	pid, err := strconv.Atoi(s)
 	if err != nil {
 		return err
 	}
