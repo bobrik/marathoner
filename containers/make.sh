@@ -18,6 +18,11 @@ fi
 
 BASE=$(cd "$(dirname $0)" && pwd)
 
+if [[ "${BASE}" != *src/github.com/bobrik/marathoner/containers ]]; then
+    echo "Not in the right tree, expected src/github.com/bobrik/marathoner"
+    exit 1
+fi
+
 rsync -a --delete --delete-excluded --exclude=github.com/bobrik/marathoner/containers \
     "${BASE}/../../../../" "${BASE}/${IMAGE}/src"
 
